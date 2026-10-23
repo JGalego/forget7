@@ -1,0 +1,2 @@
+sagemaker-train[tokenizer]
+botocore[crt]

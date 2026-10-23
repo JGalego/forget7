@@ -1,0 +1,49 @@
+# Setup: `uv tool install pre-commit && pre-commit install`. Run everything: `pre-commit run --all-files`.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-added-large-files
+        args: [--maxkb=2048]
+      - id: debug-statements
+      - id: detect-private-key
+      - id: detect-aws-credentials
+        args: [--allow-missing-credentials]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.2
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.3
+    hooks:
+      - id: codespell
+
+  - repo: local
+    hooks:
+      # Training runs print real ARNs (out/ is gitignored, but logs get pasted into docs).
+      # The AWS documentation placeholders 123456789012 and 111122223333 are allowed.
+      - id: no-real-aws-account-ids
+        name: no real AWS account IDs in ARNs
+        language: pygrep
+        entry: 'arn:aws:[a-z0-9-]+:[a-z0-9-]*:(?!123456789012:|111122223333:)\d{12}:'
+        exclude: ^\.pre-commit-config\.yaml$
+
+      # Masking math for the forget/retain datums; stdlib only (stubs the SDK), no AWS.
+      - id: offline-tests
+        name: offline datum tests
+        language: python
+        entry: python tests/test_data.py
+        pass_filenames: false
+        files: ^(forget7|tests)/.*\.py$
